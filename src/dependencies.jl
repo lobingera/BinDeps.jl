@@ -615,7 +615,7 @@ const EXTENSIONS = ["", "." * Libdl.dlext]
 # Finds all copies of the library on the system, listed in preference order.
 # Return value is an array of tuples of the provider and the path where it is found
 function _find_library(dep::LibraryDependency; provider = Any)
-    display(dep)
+    println(dep.name,dep.providers)
     ret = Any[]
     # Same as find_library, but with extra check defined by dep
     libnames = [dep.name;get(dep.properties,:aliases,String[])]
@@ -650,8 +650,10 @@ function _find_library(dep::LibraryDependency; provider = Any)
         (isempty(paths) || all(map(isempty,paths))) && continue
         for lib in libnames, path in paths
             l = joinpath(path, lib)
+            display(l)
             h = Libdl.dlopen_e(l, Libdl.RTLD_LAZY)
             if h != C_NULL
+                display("found")
                 works = dep.libvalidate(l,h)
                 l = Libdl.dlpath(h)
                 Libdl.dlclose(h)
@@ -893,7 +895,6 @@ function satisfy!(deps::LibraryGroup, methods = defaults)
 end
 
 function satisfy!(dep::LibraryDependency, methods = defaults)
-    display(dep)
     sp = map(x->typeof(x[1][1]),_find_library(dep))
     if !isempty(sp)
         for m in methods
